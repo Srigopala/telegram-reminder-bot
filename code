@@ -1,0 +1,36 @@
+import logging
+import datetime
+from telegram import Bot
+from telegram.ext import ApplicationBuilder, ContextTypes
+from apscheduler.schedulers.background import BackgroundScheduler
+
+BOT_TOKEN = 'your_bot_token_here'  # Replace this
+USER_ID = your_user_id_here        # Replace this (without quotes)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=BOT_TOKEN)
+
+async def send_reminder(context: ContextTypes.DEFAULT_TYPE):
+    await bot.send_message(chat_id=USER_ID, text="🔔 Wake up! It's 3:45 AM! Time to rise and shine.")
+
+async def daily_check_in(context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "✅ Morning Check-In:\n\n"
+        "1. 📖 Have you read for 1 hour?\n"
+        "2. 👥 Did you meet or guide 10 boys today?\n"
+        "3. 🙏 Did you perform your service properly?\n"
+        "4. 🌱 Did you follow the 4 regulative principles?\n\n"
+        "Please reply Yes/No to yourself honestly."
+    )
+    await bot.send_message(chat_id=USER_ID, text=text)
+
+if __name__ == '__main__':
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(lambda: app.create_task(send_reminder(None)), trigger='cron', hour=3, minute=45)
+    scheduler.add_job(lambda: app.create_task(daily_check_in(None)), trigger='cron', hour=10, minute=0)
+    scheduler.start()
+    print("Bot is running...")
+    app.run_polling()
